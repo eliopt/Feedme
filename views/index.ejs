@@ -9,6 +9,7 @@
     <script src="js/sweet-alert.js"></script> 
     <link rel="stylesheet" type="text/css" href="css/sweet-alert.css">
     <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/print.css" media="print" />
     <script type="text/javascript" src="https://js.stripe.com/v2/"></script>
     <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
 </head>
@@ -93,7 +94,7 @@
         });
     }
     function panier() {
-        socket.emit('panier', {});
+        socket.emit('panier', {call:'panier'});
     }
     function panierCount() {
         socket.emit('panierCount', {});
@@ -128,8 +129,24 @@
         $('.panier span').text(data['panierCount']);
     });
     socket.on('payer', function (data) {
-        socket.emit('panierClear');
-        $('.sidebar ul li:first-child a').click();
+        socket.emit('panier', {call:'facture'});
+    });
+    socket.on('facture', function(data) {
+        socket.emit('panierClear', {});
+        $('.brand').text('Facture');
+        $('.content').addClass('noPadding');
+        $('.content').text('');
+        $('.search').hide();
+        $('.sidebar .active').removeClass('active');
+        var table = $(document.createElement('table'));
+        for (var key in data['items']) {
+            var row = data['items'][key];
+            if(row['kind'] == 'vegetable') var par = ' kg';
+            else var par = '';
+            table.append($(document.createElement('tr')).append($(document.createElement('td')).html(''+row['titre'])).append($(document.createElement('td')).text(row['count']+par)).append($(document.createElement('td')).text((row['prix']*row['count']).toFixed(2)+'€')));
+        }
+        table.append('<tr class="total"><td>Total</td><td></td><td>'+data['total'].toFixed(2)+'</td>');
+        $('.content').append(table).append('<div class="panierControls"><a href="#" onClick="window.print();" class="btn btnPrimary"><i class="fa fa-print"></i> Imprimer</a></div>');
     });
     socket.on('err', function (data) {
         if(data['message'] == 'Le panier est vide!') {
