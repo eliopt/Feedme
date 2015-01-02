@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Feedme</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="./css/style.css">
+    <script type="text/javascript" src="./js/jquery.js"></script>
+    <script src="js/sweet-alert.js"></script> 
+    <link rel="stylesheet" type="text/css" href="css/sweet-alert.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="https://js.stripe.com/v2/"></script>
+    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="header"><a href="#" class="brand">Feedme</a>
+        <div class="panier"><a href="#" onClick="panier();"><i class="fa fa-shopping-cart"></i><span></span></a>
+        </div>
+    </div>
+    <div class="sidebar">
+        <ul>
+            <li class="active" data-kind="vegetable"><a href="#">Fruits/Légumes</a>
+            </li>
+            <li data-kind="viande"><a href="#">Boucherie</a>
+            </li>
+            <li data-kind="lait"><a href="#">Produits laitiers</a>
+            </li>
+        </ul>
+    </div>
+    <div class="modal">
+        <div class="back" onClick="$('.modal').hide();"></div>
+        <div class="modalContent">
+            <img src="" alt="">
+            <a href="#" onClick="$('.modal').hide();" class="close">&times;</a>
+            <div class="controls">
+                <input type="number" class="kg" placeholder="kg"><a href="#" class="btn btnPrimary addPanier"><i class="fa fa-shopping-cart"></i></a>
+            </div>
+            <h2></h2>
+            <p></p>
+        </div>
+    </div>
+    <div class="search">
+    <input type="text" id="search" placeholder="Rechercher..." autofocus>
+    </div>
+    <div class="content">
+    </div>
+    <script type="text/javascript">
+    Stripe.setPublishableKey('pk_test_8AYuULi204AF3jvVUubOQwEH');
+    function payer() {
+        if(number = Stripe.card.validateCardNumber($('.card-number').val())) {
+            if(expiry = Stripe.card.validateExpiry($('.card-month').val(), $('.card-year').val())) {
+                if(cvc = Stripe.card.validateCVC($('.card-cvc').val())) {
+                    Stripe.card.createToken({
+                      number: $('.card-number').val(),
+                      cvc: $('.card-cvc').val(),
+                      exp_month: $('.card-month').val(),
+                      exp_year: $('.card-year').val()
+                    }, stripeResponseHandler);
+                } else {
+                    swal('Erreur!', 'Le numéro secret est invalide.', 'error');
+                }
+            } else {
+                swal('Erreur!', 'La date d\'expiration est invalide.', 'error');
+            }
+        } else {
+            swal('Erreur!', 'La numéro de carte est invalide.', 'error');
+        }
+    }
+    $('.sidebar ul li a').click(function() {
+        if(!$(this).parent().hasClass('active')) {
+            $('.sidebar ul li.active').removeClass('active');
+            $(this).parent().addClass('active');
+            $('.content').text('');
+            socket.emit('getItems', {kind: $(this).parent().attr('data-kind')});
+        }
+    });
+    socket = io('http://localhost');
+    function stripeResponseHandler(status, response) {
+      if (response.error) {
+        swal('Erreur!', response.error.message, 'error');
+      } else {
+        var token = response.id;
+        socket.emit('payer', {token:token});
+      }
+    }
+    $(document).ready(function() {
+        socket.emit('getItems', {kind: 'vegetable'});
+    });
+    function imgBack() {
+        $('img').each(function () {
+           if($(this).css('backgroundImage') === 'none' || $(this).parent().parent().hasClass('modal')) $(this).css('backgroundImage', 'url("'+$(this).attr('data-src')+'")'); 
+        });
+    }
+    function panier() {
+        socket.emit('panier', {});
+    }
+    function panierCount() {
+        socket.emit('panierCount', {});
+        setTimeout(panierCount, 1000);
+    }
+    panierCount();
+    // NEW selector
+    jQuery.expr[':'].Contains = function(a, i, m) {
+      return jQuery(a).text().toUpperCase()
+          .indexOf(m[3].toUpperCase()) >= 0;
+    };
+
+    // OVERWRITES old selecor
+    jQuery.expr[':'].contains = function(a, i, m) {
+      return jQuery(a).text().toUpperCase()
+          .indexOf(m[3].toUpperCase()) >= 0;
+    };
+    ( function( $ ) {
+       $( 'a[href="#"]' ).click( function(e) {
+          e.preventDefault();
+       } );
+    } )( jQuery );
+    $('.addPanier').click(function() {
+        if($('.modal').attr('data-id') && $('.kg').val() >= 1) {
+            socket.emit('addPanier', {id:$('.modal').attr('data-id'), count:Math.round(parseInt($('.kg').val()))});
+            $('.modal').hide();
+        } else {
+            swal('Vous devez entrer un nombre!');
+        }
+    });
+    socket.on('panierCount', function (data) {
+        $('.panier span').text(data['panierCount']);
+    });
+    socket.on('payer', function (data) {
+        socket.emit('panierClear');
+        $('.sidebar ul li:first-child a').click();
+    });
+    socket.on('err', function (data) {
+        if(data['message'] == 'Le panier est vide!') {
+            $('.sidebar ul li:first-child a').click();
+        }
+        swal(data['message']);
+    });
+    socket.on('panier', function (data) {
+        $('.brand').text('Panier');
+        $('.content').addClass('noPadding');
+        $('.content').text('');
+        $('.search').hide();
+        $('.sidebar .active').removeClass('active');
+        var table = $(document.createElement('table'));
+        for (var key in data['items']) {
+            var row = data['items'][key];
+            if(row['kind'] == 'vegetable') var par = ' kg';
+            else var par = '';
+            table.append($(document.createElement('tr')).append($(document.createElement('td')).html('<a href="#" onClick="panierDelete('+row['id']+');">&times;</a> '+row['titre'])).append($(document.createElement('td')).text(row['count']+par)).append($(document.createElement('td')).text((row['prix']*row['count']).toFixed(2)+'€')));
+        }
+        table.append('<tr class="total"><td>Total</td><td></td><td>'+data['total'].toFixed(2)+'</td>');
+        $('.content').append(table).append('<div class="panierControls"><a href="#" onClick="caisse();" class="btn btnPrimary"><i class="fa fa-shopping-cart"></i> Caisse</a></div>');
+    });
+    function panierDelete(id) {
+        socket.emit('panierDelete', {id:id});
+    }
+    function caisse() {
+        socket.emit('caisse', {});
+    }
+    function perso() {
+        socket.emit('perso', {adresse:$('.adresse').val(), cp:$('.cp').val()});
+    }
+    function checkout() {
+        socket.emit('checkout', {telephone:$('.telephone').val(), email:$('.email').val()});
+    }
+    socket.on('caisse', function(data) {
+        $('.content').html('<div class="box"><h2>Adresse de livraison</h2><input type="text" class="adresse" placeholder="Adresse"><input type="text" class="cp" placeholder="Code postal"><input type="text" value="Paris" readonly><input type="text" value="France" readonly><a href="#" onClick="perso();" class="btn btnPrimary">Suivant <i class="fa fa-angle-right"></i></a></div>');
+    });
+    socket.on('panierDelete', function(data) {
+        panier();
+    });
+    socket.on('perso', function(data) {
+        $('.box').html('<h2>Informations personnelles</h2><input class="email" type="text" placeholder="Email"><input class="telephone" type="text" placeholder="Telephone"><a href="#" onClick="checkout();" class="btn btnPrimary">Payer <i class="fa fa-angle-right"></i></a>');
+    });
+    socket.on('checkout', function(data) {
+        $('.box').html('<h2>Payer</h2><input type="text" class="card-number" placeholder="Numéro de carte"><input type="text" class="card-month" placeholder="Mois d\'expiration"><input type="text" class="card-year" placeholder="Année d\'expiration"><input type="text" class="card-cvc" placeholder="Numéro d\'identification"><a href="#" onClick="payer();" class="btn btnPrimary">Payer <i class="fa fa-angle-right"></i></a>');
+    });
+    $('#search').keyup(function() {
+       $('.item h3:contains('+$(this).val()+')').parent().parent().css('display', 'inline-block');
+       $('.item h3:not(:contains('+$(this).val()+'))').parent().parent().css('display', 'none'); 
+    });
+    socket.on('getItems', function (data) {
+        $('.search').show();
+        $('.brand').text('Feedme');
+        $('#search').focus();
+        $('.content').removeClass('noPadding');
+        for(var key in data['items']) {
+            var row = data['items'][key];
+            if(row['kind'] == 'vegetable') var par = '/kg';
+            else var par = '';
+            $('.content').append($(document.createElement('div')).addClass('item').attr('data-id', row['id']).attr('data-kind', row['kind']).append($(document.createElement('div')).append($(document.createElement('img')).attr('data-src', './img/'+row['id']+'.png')).append($(document.createElement('span')).addClass('prix').text(row['prix']+'€'+par+'')).append($(document.createElement('h3')).text(row['titre'])).append($(document.createElement('p')).html(row['description']+'<span><i class="fa fa-map-marker"></i> '+row['provenance']+'</span>'))));
+        }
+        $('.item').click(function() {
+            $('.modalContent img').attr('data-src', $(this).find('img').attr('data-src'));
+            $('.modalContent h2').text($(this).find('h3').text());
+            $('.modalContent p').html($(this).find('p').html());
+            if($(this).attr('data-kind') == 'vegetable') var par = 'kg';
+            else if($(this).attr('data-kind') == 'viande') var par = '0';
+            else if($(this).attr('data-kind') == 'lait') var par = '0';
+            $('.modal input').attr('placeholder', par);
+            $('.modal').attr('data-id',$(this).attr('data-id'));
+            $('.modal').show();
+            imgBack();
+        });
+        $('img').each(function () {
+           imgBack(); 
+        });
+    });
+    </script>
+</body>
+
+</html>
