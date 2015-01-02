@@ -1,0 +1,12 @@
+.sidebar {
+    display: none !important;
+}
+.header {
+    display: none !important;
+}
+.content {
+    padding: 0 !important;
+}
+.btn {
+    display: none !important;
+}
