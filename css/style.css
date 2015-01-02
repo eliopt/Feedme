@@ -49,10 +49,10 @@ tr:nth-child(even) {
     background:rgb(248, 248, 248);
 }
 tr td:nth-child(2) {
-    width: 70px;
+    width: 100px;
 }
 tr td:nth-child(3) {
-    width: 70px;
+    width: 100px;
 }
 .noPadding {
     padding-left: 200px !important;
@@ -131,7 +131,7 @@ tr td:nth-child(3) {
 .content {
     padding-top: 127px;
     position: relative;
-    padding-right: 10px;
+    padding-right: 0px;
     padding-left: 210px;
     padding-bottom: 10px;
 }
@@ -164,7 +164,7 @@ tr td:nth-child(3) {
 }
 .content .item div {
     background: whiteSmoke;
-    margin-left: 10px;
+    margin-left: 14px;
     margin-right: 10px;
     border-radius: 3px;
     padding: 1em;
