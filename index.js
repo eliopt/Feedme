@@ -28,7 +28,10 @@ app.use(cookieParser)
         store: sessionStore,
         resave: true,
         saveUninitialized: true
-    })).get('/', function(req, res) {
+    })).get('/dashboard', function(req, res) {
+        session = req.session;
+        res.render('dashboard.ejs', {});
+    }).get('/', function(req, res) {
         session = req.session;
         if(session.panier === undefined) session.panier = [];
         if(session.me === undefined) session.me = [];
@@ -129,7 +132,7 @@ io.on('connection', function(socket) {
             session.me['telephone'] = post['telephone'];
             session.me['email'] = post['email'];
             session.save();
-            connection.query('INSERT INTO commandes(email, adresse, montant, detail, telephone, status) VALUES("'+session.me['email']+'", "'+session.me['adresse']+' '+session.me['cp']+'", "'+session.total*100+'", "'+JSON.stringify(session.panier).replace(/"/g, '\\"')+'", "'+session.me['telephone']+'", 0)', function(err, infos) {
+            connection.query('INSERT INTO commandes(email, adresse, montant, detail, telephone, status) VALUES("'+session.me['email']+'", "'+session.me['adresse']+' '+session.me['cp']+'", "'+session.total*100+'", \''+JSON.stringify(session.panier).replace(/'/g, "\\'")+'\', "'+session.me['telephone']+'", 0)', function(err, infos) {
                 if(!err) {
                     session.idCommande = infos.insertId;
                     session.save();
@@ -165,7 +168,7 @@ io.on('connection', function(socket) {
         var items = [];
         var total = 0;
         var i = 0;
-        if(session.panier.length == 0) {
+        if(session.panier.length == 0 && post['call'] == 'panier') {
             socket.emit('err', {message:'Le panier est vide!'});
         } else {
             for(var key in session.panier) {
@@ -176,8 +179,8 @@ io.on('connection', function(socket) {
                         total = total + rows[0]['prix'] * roww['count'];
                         i++;
                         items.push({'titre':rows[0]['titre'], 'description':rows[0]['description'], 'id':rows[0]['id'], 'prix':rows[0]['prix'], 'provenance':rows[0]['provenance'], 'kind':rows[0]['kind'], 'count':roww['count']});
-                        if(i == session.panier.length) {          
-                            socket.emit('panier', {
+                        if(i == session.panier.length) {        
+                            socket.emit(post['call'], {
                                 items: items,
                                 total: total
                             });
@@ -204,7 +207,6 @@ io.on('connection', function(socket) {
           } else {
             connection.query('UPDATE commandes SET status = 1 WHERE id = "'+session.idCommande+'"', function(err, rows) {
                 if(!err) {
-                    socket.emit('err', {message:'Votre payement a été accepté!'});
                     socket.emit('payer', {});
                 } else {
                     console.log(err);
@@ -214,8 +216,8 @@ io.on('connection', function(socket) {
         });
     });
     socket.on('panierClear', function(post) {
-        //session.panier = [];
-        session.destroy();
+        session.panier = [];
+        session.save();
     });
     socket.on('addPanier', function(post) {
         connection.query('SELECT * FROM produits WHERE id = "'+post['id']+'"', function(err, rows) {
