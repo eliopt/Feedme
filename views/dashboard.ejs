@@ -7,64 +7,157 @@
     <link rel="stylesheet" type="text/css" href="./css/style.css">
     <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
     <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="js/sweet-alert.js"></script> 
+    <link rel="stylesheet" type="text/css" href="css/sweet-alert.css">
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 
 <body>
     <div class="header"><a href="/" class="brand">Feedme</a>
-        <div class="panier"><a href="#"><i class="fa fa-shopping-cart"></i><span>3</span></a>
         </div>
     </div>
     <div class="sidebar">
         <ul>
-            <li><a href="#">Fruits/Légumes</a>
+            <li><a href="/">Accueil</a>
             </li>
-            <li><a href="#">Boucherie</a>
-            </li>
-            <li><a href="#">Produits laitiers</a>
+            <li class="active"><a href="#" onClick="accueil();">Dashboard</a>
             </li>
         </ul>
     </div>
-    <div class="content noPadding">
-        <table>
-            <tr>
-                <td>Tomates</td>
-                <td>1</td>
-                <td>3</td>
-            </tr>
-            <tr>
-                <td>Tomates</td>
-                <td>1</td>
-                <td>3</td>
-            </tr>
-            <tr>
-                <td>Tomates</td>
-                <td>1</td>
-                <td>3</td>
-            </tr>
-            <tr>
-                <td>Tomates</td>
-                <td>1</td>
-                <td>3</td>
-            </tr>
-            <tr>
-                <td>Tomates</td>
-                <td>1</td>
-                <td>3</td>
-            </tr>
-            <tr class="total">
-                <td>Total</td>
-                <td></td>
-                <td>15</td>
-            </tr>
-        </table>
-        <div class="panierControls">
-            <a href="#" class="btn btnPrimary"><i class="fa fa-shopping-cart"></i> Caisse</a>
+    <div class="search">
+        <input type="text" placeholder="Ex: c154, p298, pomme de terre, 0640561251, user@gmail.com" autofocus>
+    </div>
+    <div class="content">
+        <div class="homeHide"></div>
+        <div class="addHide">
+            <div class="widget">
+                <h2><span class="nP">1000</span> <small>produits</small></h2>
+            </div>
+            <div class="widget">
+                <h2><span class="nC">1000</span> <small>commandes</small></h2>
+            </div>
+            <div class="widget">
+                <h2><span class="mE">1000</span>€ <small>/mois</small></h2>
+            </div>
+            <div class="widget" style="cursor:pointer;" onClick="addProduit();">
+                <h2>Ajouter produit</h2>
+            </div>
+            <div class="widget" style="cursor:pointer;" onClick="addQuantite();">
+                <h2>Ajouter quantité</h2>
+            </div>
         </div>
     </div>
     <script type="text/javascript">
-    $('img').each(function () {
-       $(this).css('backgroundImage', 'url("'+$(this).attr('src')+'")').attr('src', ''); 
+    socket = io('http://localhost');
+    $(document).ready(function() {
+        socket.emit('getInfos', {});
     });
+    $('.search input').keyup(function() {
+        if($(this).val() == '') {
+            accueil();
+        } else if((!isNaN($(this).val()) && ($(this).val().length == 10 || $(this).val().length == 11)) || /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test($(this).val())) {
+            commande($(this).val(), 'user');
+        } else if(/c[0-9]+/.test($(this).val())) {
+            commande($(this).val().replace(/c/, ''));
+        } else if(/c[0-9]+/.test($(this).val())) {
+            commande($(this).val().replace(/c/, ''));
+        } else if(/p[0-9]+/.test($(this).val())) {
+            produit($(this).val().replace(/p/, ''));
+        } else {
+            socket.emit('search', {q:$(this).val()});
+        }
+    });
+    function box() {
+        $('.content').addClass('box').addClass('noPadding');
+        $('.addHide').hide();
+    }
+    function commande(id, user) {
+        box();
+        $('.content .homeHide').html('<h2></h2>');
+        if(!user) socket.emit('commande', {id:id});
+        else socket.emit('commande', {user:id});
+    }
+    function produit(id) {
+        box();
+        $('.content .homeHide').html('<h2></h2><p></p><span class="quantite"></span>');
+        socket.emit('produit', {id:id});
+    }
+    function addProduit() {
+        $('.addHide').hide();
+        $('.content').addClass('box').addClass('noPadding').append('<div class="homeHide"><h2>Ajouter un produit</h2><input type="text" class="titre" placeholder="Titre"><input type="text" class="prix" placeholder="Prix"><input type="text" class="description" placeholder="Description"><select class="kind"><option value="vegetable">Fruits/Legumes</option><option value="viande">Boucherie</option><option value="lait">Produit laitier</option></select><input type="text" class="quantite" placeholder="Quantite disponible"><a onClick="addProduct();" class="btn btnPrimary">Ajouter</a></div>');
+    }
+    function addQuantite() {
+        $('.addHide').hide();
+        $('.content').addClass('box').addClass('noPadding').append('<div class="homeHide"><h2>Ajouter une quantite</h2><input type="text" class="ref" placeholder="Référence"><input type="text" class="quantite" placeholder="Quantite à ajouter"><a href="#" onClick="addQuantity();" class="btn btnPrimary">Ajouter</a></div>');
+    }
+    function addQuantity() {
+        if(parseInt($('.ref').val().replace(/p/, '')) && !isNaN($('.quantite').val())) {
+            socket.emit('addQuantity', {ref:parseInt($('.ref').val().replace(/p/, '')),q:$('.quantite').val()});
+        } else {
+            swal('Erreur, vérifiez les champs!', '', 'error');
+        }
+    }
+    function addProduct() {
+        if(!isNaN($('.prix').val()) && !isNaN($('.quantite').val()) && $('.titre').val() !== '' && $('.quantite').val() !== '' && $('.prix').val() !== '') {
+            socket.emit('addProduct', {prix:$('.prix').val(), titre:$('.titre').val(), quantite:$('.quantite').val(), description:$('.description').val(), kind:$('.kind').val()});
+        } else {
+            swal('Erreur, vérifiez les champs!', '', 'error');
+        }
+    }
+    socket.on('commande', function(datas) {
+        for(var key in datas['rows']) {
+            var data = datas['rows'][key];
+            $('.homeHide').append('<div class="c'+data['id']+'"><h2></h2><p></p><table class="detail"></table></div>')
+            if(data['status'] == 0) var status = 'À payer';
+            else if(data['status'] == 1) var status = 'Payé';
+            else if(data['status'] == 2) var status = 'En cours de livraison';
+            else if(data['status'] == 3) var status = 'Livré';
+           $('.c'+data['id']+' h2').html('c'+data['id']+' — '+(data['montant']/100).toFixed(2)+'€ <span class="prix">'+status+'</span>');
+           $('.c'+data['id']+' p').html(data['email']+'<br/>'+data['telephone']);
+           socket.emit('panier', {panier:JSON.parse(data['detail']), call:'detail', idC:data['id']});
+        }
+    });
+    socket.on('detail', function(data) { 
+        $('.c'+data['idC']+' table').text('');
+        for(var key in data['items']) {
+            var row = data['items'][key];
+            $('.c'+data['idC']+' table').append('<tr><td>'+row['titre']+'</td><td>'+row['count']+'</td><td>'+(row['prix']*row['count']).toFixed(2)+'€</td></tr>');
+        }
+        $('.c'+data['idC']+' table').append('<tr class="total"><td>Total</td><td></td><td>'+data['total'].toFixed(2)+'</td></tr>');
+    });
+    socket.on('produit', function(data) {
+       $('.homeHide h2').html('p'+data['id']+' — '+data['titre']+' <span class="prix">'+data['prix'].toFixed(2)+'€</span>');
+       $('.homeHide p').text(data['description']);
+    });
+    socket.on('noResults', function(data) {
+       $('.homeHide h2').html('Aucun résultat');
+    });
+    socket.on('getInfos', function(data) {
+       $('.nP').text(data['np']);
+       $('.nC').text(data['nc']);
+       $('.mE').text(data['me']);
+    });
+    socket.on('addProduct', function (data) {
+        swal('La référence p'+data['id']+' a bien été ajoutée.', '', 'success');
+        accueil();
+    });
+    socket.on('addQuantity', function (data) {
+        swal('La référence p'+data['ref']+' a bien été modifiée.', '', 'success');
+        accueil();
+    });
+    function accueil() {
+        $('.homeHide').text('');
+        $('.addHide').show();
+        $('.content').removeClass('box').removeClass('noPadding');
+    }
+    socket.on('err', function (data) {
+        swal(data['message'], '', 'error');
+    });
+    ( function( $ ) {
+       $( 'a[href="#"]' ).click( function(e) {
+          e.preventDefault();
+       } );
+    } )( jQuery );
     </script>
 </body>
 
