@@ -132,7 +132,7 @@ io.on('connection', function(socket) {
             session.me['telephone'] = post['telephone'];
             session.me['email'] = post['email'];
             session.save();
-            connection.query('INSERT INTO commandes(email, adresse, montant, detail, telephone, status) VALUES("'+session.me['email']+'", "'+session.me['adresse']+' '+session.me['cp']+'", "'+session.total*100+'", \''+JSON.stringify(session.panier).replace(/'/g, "\\'")+'\', "'+session.me['telephone']+'", 0)', function(err, infos) {
+            connection.query('INSERT INTO commandes(email, adresse, montant, detail, telephone, status, time) VALUES("'+session.me['email']+'", "'+session.me['adresse']+' '+session.me['cp']+'", "'+session.total*100+'", \''+JSON.stringify(session.panier).replace(/'/g, "\\'")+'\', "'+session.me['telephone']+'", 0, "'+new Date().getTime()+'")', function(err, infos) {
                 if(!err) {
                     session.idCommande = infos.insertId;
                     session.save();
@@ -168,24 +168,32 @@ io.on('connection', function(socket) {
         var items = [];
         var total = 0;
         var i = 0;
-        if(session.panier.length == 0 && post['call'] == 'panier') {
+        if(post['panier']) {
+            var panier = post['panier'];
+        } else {
+            var panier = session.panier;
+        }
+        if(panier.length == 0 && post['call'] == 'panier') {
             socket.emit('err', {message:'Le panier est vide!'});
         } else {
-            for(var key in session.panier) {
-                var row = session.panier[key];
+            for(var key in panier) {
+                var row = panier[key];
                 connection.query('SELECT * FROM produits WHERE id = "'+row['id']+'"', function(err, rows) {
-                    var roww = session.panier[i];
+                    var roww = panier[i];
                     if(!err) {
                         total = total + rows[0]['prix'] * roww['count'];
                         i++;
                         items.push({'titre':rows[0]['titre'], 'description':rows[0]['description'], 'id':rows[0]['id'], 'prix':rows[0]['prix'], 'provenance':rows[0]['provenance'], 'kind':rows[0]['kind'], 'count':roww['count']});
-                        if(i == session.panier.length) {        
+                        if(i == panier.length) {        
                             socket.emit(post['call'], {
                                 items: items,
-                                total: total
+                                total: total,
+                                idC: post['idC']
                             });
-                            session.total = total;
-                            session.save();
+                            if(!post['panier']) {
+                                session.total = total;
+                                session.save();
+                            }
                         }
                     } else {
                         console.log(err);
@@ -218,6 +226,77 @@ io.on('connection', function(socket) {
     socket.on('panierClear', function(post) {
         session.panier = [];
         session.save();
+    });
+    socket.on('addProduct', function(post) {
+        connection.query('INSERT INTO produits(titre, prix, description, provenance, kind, quantite) VALUES("'+post['titre']+'","'+post['prix']+'","'+post['description']+'","Ile de France","'+post['kind']+'","'+post['quantite']+'")', function(err, infos) {
+            if(!err) {
+                socket.emit('addProduct', {id:infos.insertId});
+            } else {
+                console.log(err);
+            }
+        });
+    });
+    socket.on('addQuantity', function(post) {
+        connection.query('SELECT * FROM produits WHERE id = "'+post['ref']+'"', function(err, rows) {
+            if(!err) {
+                var quantite = parseInt(rows[0]['quantite']) + parseInt(post['q']);
+                connection.query('UPDATE produits SET quantite = "'+quantite+'" WHERE id = "'+post['ref']+'"', function(err, infos) {
+                    if(!err) {
+                        socket.emit('addQuantity', {ref:post['ref']});
+                    } else {
+                        console.log(err);
+                    }
+                });
+            } else {
+                console.log(err);
+            }
+        });
+    });
+    socket.on('produit', function(post) {
+        connection.query('SELECT * FROM produits WHERE id = "'+post['id']+'"', function(err, rows) {
+            if(!err) {
+                if(rows[0]) socket.emit('produit', {id:rows[0]['id'],titre:rows[0]['titre'],prix:rows[0]['prix'],description:rows[0]['description'],kind:rows[0]['kind'],quantite:rows[0]['quantite']});
+                else socket.emit('noResults', {});
+            } else {
+                console.log(err);
+            }
+        });
+    });
+    socket.on('commande', function(post) {
+        if(post['id']) var q = 'SELECT * FROM commandes WHERE id = "'+post['id']+'"';
+        else if(post['user']) {
+            if(/^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(post['user'])) {
+                var q = 'SELECT * FROM commandes WHERE email = "'+post['user']+'" ORDER BY time DESC';
+            } else {
+                var q = 'SELECT * FROM commandes WHERE telephone = "'+post['user']+'" ORDER BY time DESC';
+            }
+        }
+        connection.query(q, function(err, rows) {
+            if(!err) {
+                if(rows[0]) socket.emit('commande', {rows:rows});
+                else socket.emit('noResults', {});
+            } else {
+                console.log(err);
+            }
+        });
+    });
+    socket.on('getInfos', function(post) {
+        var nP = 0, nC = 0, mE = 0;
+        connection.query('SELECT * FROM produits', function(err, rows) {
+            nP = rows.length;
+            if(nP && mE && nC) socket.emit('getInfos', {np:nP,me:mE,nc:nC});
+        });
+        connection.query('SELECT * FROM commandes WHERE status <= 1', function(err, rows) {
+            nC = rows.length;
+            if(nP && mE && nC) socket.emit('getInfos', {np:nP,me:mE,nc:nC});
+        });
+        connection.query('SELECT * FROM commandes', function(err, rows) {
+            for(var key in rows) {
+                mE = mE + parseInt(rows[key]['montant']) / 100;
+            }
+            mE = Math.round(mE);
+            if(nP && mE && nC) socket.emit('getInfos', {np:nP,me:mE,nc:nC});
+        });
     });
     socket.on('addPanier', function(post) {
         connection.query('SELECT * FROM produits WHERE id = "'+post['id']+'"', function(err, rows) {
