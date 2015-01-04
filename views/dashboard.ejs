@@ -90,7 +90,7 @@
         if(!id) var id = '';
         if(!prix) var prix = '';
         if(!description) var description = '';
-        $('.homeHide').html('<h2>'+add+' un produit</h2><input type="text" class="titre" placeholder="Titre" value="'+titre+'"><input type="text" class="prix" placeholder="Prix" value="'+prix+'"><input type="text" class="description" value="'+description+'" placeholder="Description">'+kind+''+quantite+'<input type="file" id="image"><a onClick="'+addPrefix+'Product('+id+');" href="#" class="btn btnPrimary">'+add+'</a>');
+        $('.homeHide').html('<h2>'+add+' un produit</h2><input type="text" class="titre" placeholder="Titre" value="'+titre+'"><input type="text" class="prix" placeholder="Prix" value="'+prix+'"><input type="text" class="description" value="'+description+'" placeholder="Description">'+kind+''+quantite+'<label class="btn" style="display:block;width:175px;"><i class="fa fa-file"></i> Choisir une vignette<input type="file" id="image"></label><a onClick="'+addPrefix+'Product('+id+');" href="#" class="btn btnPrimary">'+add+'</a>');
     }
     function editRef(id) {
 
