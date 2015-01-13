@@ -64,13 +64,19 @@
                     }, stripeResponseHandler);
                 } else {
                     swal('Erreur!', 'Le numéro secret est invalide.', 'error');
+                    setTimeout(falseDisable, 1000);
                 }
             } else {
                 swal('Erreur!', 'La date d\'expiration est invalide.', 'error');
+                setTimeout(falseDisable, 1000);
             }
         } else {
-            swal('Erreur!', 'La numéro de carte est invalide.', 'error');
+            swal('Erreur!', 'Le numéro de carte est invalide.', 'error');
+            setTimeout(falseDisable, 1000);
         }
+    }
+    function falseDisable() {
+        $('button.btn').attr('disabled', false);
     }
     $('.sidebar ul li a').click(function() {
         if(!$(this).parent().hasClass('active')) {
@@ -123,7 +129,7 @@
     } )( jQuery );
     $('.addPanier').click(function() {
         if($('.modal').attr('data-id') && $('.kg').val() >= 1) {
-            socket.emit('addPanier', {id:$('.modal').attr('data-id'), count:Math.round(parseInt($('.kg').val()))});
+            socket.emit('addPanier', {id:$('.modal').attr('data-id'), count:Math.round(parseFloat($('.kg').val()))});
             $('.modal').hide();
         } else {
             swal('Vous devez entrer un nombre!');
@@ -219,7 +225,7 @@
             var row = data['items'][key];
             if(row['kind'] == 'vegetable') var par = '/kg';
             else var par = '';
-            $('.content').append($(document.createElement('div')).addClass('item').attr('data-id', row['id']).attr('data-kind', row['kind']).append($(document.createElement('div')).append($(document.createElement('img')).attr('src', 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==').attr('data-src', './img/'+row['id']+'.png')).append($(document.createElement('span')).addClass('prix').text(row['prix']+'€'+par+'')).append($(document.createElement('h3')).text(row['titre'])).append($(document.createElement('p')).html(row['description']+'<span><i class="fa fa-map-marker"></i> '+row['provenance']+'</span>'))));
+            $('.content').append($(document.createElement('div')).addClass('item').attr('data-id', row['id']).attr('data-kind', row['kind']).append($(document.createElement('div')).append($(document.createElement('img')).attr('src', 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==').attr('data-src', './img/'+row['id']+'.png')).append($(document.createElement('span')).addClass('prix').text(parseFloat(row['prix']).toFixed(2)+'€'+par+'')).append($(document.createElement('h3')).text(row['titre'])).append($(document.createElement('p')).html(row['description']+'<span><i class="fa fa-map-marker"></i> '+row['provenance']+'</span>'))));
         }
         $('.item').click(function() {
             $('.modalContent img').attr('data-src', $(this).find('img').attr('data-src'));
