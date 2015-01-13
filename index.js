@@ -11,9 +11,10 @@ var gm = require('googlemaps');
 var stripe = require("stripe")("sk_test_TgKHpDlEbm8d2pU7eCwocNZA");
 var connection = mysql.createConnection({
     host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'feedme'
+    user: 'emmanuelcoppey',
+    password: 'azerty',
+    database: 'feedme',
+    port:8889
 });
 connection.connect();
 
@@ -69,7 +70,7 @@ app.use(cookieParser)
     })
     .get('/:dir/:file', function(req, res) {
         var dir = req.params.dir;
-        if (dir == 'js' || dir == 'css' || dir == 'img') {
+        if (dir == 'js' || dir == 'css' || dir == 'img' || dir == 'images') {
             fs.readFile('./' + req.params.dir + '/' + req.params.file + '', function read(err, data) {
                 if (err) {
                     res.status(404);
@@ -388,6 +389,8 @@ io.on('connection', function(socket) {
             } else {
                 var q = 'SELECT * FROM commandes WHERE telephone = "' + post['user'] + '" ORDER BY time DESC';
             }
+        } else {
+            var q = 'SELECT * FROM commandes WHERE status >= 1 AND status != 3 ORDER BY time ASC';
         }
         connection.query(q, function(err, rows) {
             if (!err) {
@@ -395,6 +398,15 @@ io.on('connection', function(socket) {
                     rows: rows
                 });
                 else socket.emit('noResults', {});
+            } else {
+                console.log(err);
+            }
+        });
+    });
+    socket.on('status', function(post) {
+        connection.query('UPDATE commandes SET status = '+post['status']+' WHERE id = '+post['id']+'', function(err, rows) {
+            if (!err) {
+                socket.emit('status', {});
             } else {
                 console.log(err);
             }
@@ -416,7 +428,7 @@ io.on('connection', function(socket) {
                 nc: nC
             });
         });
-        connection.query('SELECT * FROM commandes WHERE status <= 1', function(err, rows) {
+        connection.query('SELECT * FROM commandes WHERE status = 1', function(err, rows) {
             nC = rows.length;
             o = 1;
             if (i && o && p) socket.emit('getInfos', {
@@ -427,7 +439,7 @@ io.on('connection', function(socket) {
         });
         var time = new Date().getTime();
         time = time - (60 * 60 * 60 * 24 * 30);
-        connection.query('SELECT * FROM commandes WHERE time > ' + time + '', function(err, rows) {
+        connection.query('SELECT * FROM commandes WHERE status >= 1 AND time > ' + time + '', function(err, rows) {
             p = 1;
             for (var key in rows) {
                 mE = mE + parseInt(rows[key]['montant']) / 100;
