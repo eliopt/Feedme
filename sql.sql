@@ -1,32 +1,27 @@
-# ************************************************************
-# Sequel Pro SQL dump
-# Version 4096
-#
-# http://www.sequelpro.com/
-# http://code.google.com/p/sequel-pro/
-#
-# Hôte: 127.0.0.1 (MySQL 5.6.21)
-# Base de données: feedme
-# Temps de génération: 2015-01-04 18:06:22 +0000
-# ************************************************************
+-- phpMyAdmin SQL Dump
+-- version 4.2.5
+-- http://www.phpmyadmin.net
+--
+-- Host: localhost:8889
+-- Generation Time: Jan 13, 2015 at 08:54 PM
+-- Server version: 5.5.38
+-- PHP Version: 5.5.14
 
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET time_zone = "+00:00";
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+--
+-- Database: `feedme`
+--
 
+-- --------------------------------------------------------
 
-# Affichage de la table commandes
-# ------------------------------------------------------------
-
-DROP TABLE IF EXISTS `commandes`;
+--
+-- Table structure for table `commandes`
+--
 
 CREATE TABLE `commandes` (
-  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+`id` int(11) unsigned NOT NULL,
   `email` text,
   `adresse` text,
   `montant` text,
@@ -34,52 +29,82 @@ CREATE TABLE `commandes` (
   `telephone` text,
   `status` text,
   `time` bigint(20) DEFAULT NULL,
-  `nom` text,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `nom` text
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=24 ;
 
-LOCK TABLES `commandes` WRITE;
-/*!40000 ALTER TABLE `commandes` DISABLE KEYS */;
+--
+-- Dumping data for table `commandes`
+--
 
-INSERT INTO `commandes` (`id`, `email`, `adresse`, `montant`, `detail`, `telephone`, `status`, `time`, `nom`)
-VALUES
-	(15,'emmanuel.coppey@gmail.com','81, avenue Gambetta 75020','29000','[{\"id\":\"17\",\"count\":100}]','0640561251','1',1420372475904,'Coppey');
+INSERT INTO `commandes` (`id`, `email`, `adresse`, `montant`, `detail`, `telephone`, `status`, `time`, `nom`) VALUES
+(15, 'emmanuel.coppey@gmail.com', '81, avenue Gambetta 75020', '29000', '[{"id":"17","count":100}]', '0640561251', '3', 1420372475904, 'Coppey'),
+(16, 'emmanuel.coppey@gmail.com', '81, avenue Gambetta 75020', '90000', '[{"id":"17","count":300}]', '0640561251', '0', 1421082987987, 'Coppey'),
+(17, 'emmanuel.coppey@gmail.com', '81, avenue Gambetta 75020', '90000', '[{"id":"17","count":300}]', '0640561251', '0', 1421083113774, 'Coppey'),
+(18, 'emmanuel.coppey@gmail.com', '81, avenue Gambetta 75020', '90000', '[{"id":"17","count":300}]', '0640561251', '0', 1421083196889, 'Coppey'),
+(19, 'emmanuel.coppey@gmail.com', '81, avenue Gambetta 75020', '90000', '[{"id":"17","count":300}]', '0640561251', '0', 1421083227704, 'Coppey'),
+(20, 'emmanuel.coppey@gmail.com', '81, avenue Gambetta 75020', '90000', '[{"id":"17","count":300}]', '0640561251', '0', 1421083324521, 'c'),
+(21, 'emmanuel.coppey@gmail.com', '81, avenue Gambetta 75020', '90000', '[{"id":"17","count":300}]', '0640561251', '0', 1421083381773, 'Coppey'),
+(22, 'emmanuel.coppey@gmail.com', '81, avenue Gambetta 75020', '90000', '[{"id":"17","count":300}]', '0640561251', '0', 1421083417649, 'Coppey'),
+(23, 'emmanuel.coppey@gmail.com', '81, avenue Gambetta 75020', '90000', '[{"id":"17","count":300}]', '0640561251', '3', 1421083462109, 'Coppey');
 
-/*!40000 ALTER TABLE `commandes` ENABLE KEYS */;
-UNLOCK TABLES;
+-- --------------------------------------------------------
 
-
-# Affichage de la table produits
-# ------------------------------------------------------------
-
-DROP TABLE IF EXISTS `produits`;
+--
+-- Table structure for table `produits`
+--
 
 CREATE TABLE `produits` (
-  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+`id` int(11) unsigned NOT NULL,
   `titre` text,
   `prix` text,
   `description` text,
   `provenance` text,
   `kind` varchar(11) NOT NULL DEFAULT '',
-  `quantite` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `quantite` int(11) DEFAULT NULL
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=26 ;
 
-LOCK TABLES `produits` WRITE;
-/*!40000 ALTER TABLE `produits` DISABLE KEYS */;
+--
+-- Dumping data for table `produits`
+--
 
-INSERT INTO `produits` (`id`, `titre`, `prix`, `description`, `provenance`, `kind`, `quantite`)
-VALUES
-	(17,'Ananas','3.00','','Ile de France','vegetable',360);
+INSERT INTO `produits` (`id`, `titre`, `prix`, `description`, `provenance`, `kind`, `quantite`) VALUES
+(17, 'Ananas', '3.00', '', 'Ile de France', 'vegetable', 460),
+(18, 'Pomme', '2.00', '', 'Ile de France', 'vegetable', 200),
+(19, 'Poulet', '1.50', '', 'Ile de France', 'viande', 200),
+(20, 'Lait', '1', '', 'Ile de France', 'lait', 300),
+(21, 'Carotte', '1.2', '', 'Ile de France', 'vegetable', 100),
+(22, 'Celeri', '2.0', '', 'Ile de France', 'vegetable', 100),
+(23, 'Chou blanc', '1.2', '', 'Ile de France', 'vegetable', 100),
+(24, 'Chou de Bruxelles', '2.3', '', 'Ile de France', 'vegetable', 100),
+(25, 'Citrouille', '5', '', 'Ile de France', 'vegetable', 300);
 
-/*!40000 ALTER TABLE `produits` ENABLE KEYS */;
-UNLOCK TABLES;
+--
+-- Indexes for dumped tables
+--
 
+--
+-- Indexes for table `commandes`
+--
+ALTER TABLE `commandes`
+ ADD PRIMARY KEY (`id`);
 
+--
+-- Indexes for table `produits`
+--
+ALTER TABLE `produits`
+ ADD PRIMARY KEY (`id`);
 
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `commandes`
+--
+ALTER TABLE `commandes`
+MODIFY `id` int(11) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=24;
+--
+-- AUTO_INCREMENT for table `produits`
+--
+ALTER TABLE `produits`
+MODIFY `id` int(11) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=26;
