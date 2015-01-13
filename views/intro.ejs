@@ -4,216 +4,138 @@
 <head>
     <title>Feedme</title>
     <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="./css/style.css">
     <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
     <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
     <script src="js/sweet-alert.js"></script> 
     <link rel="stylesheet" type="text/css" href="css/sweet-alert.css">
     <script src="/socket.io/socket.io.js"></script>
+    <style type="text/css">
+    html {
+        height: 100%;
+    }
+    body {
+        height: 100%;
+        font-family: "open sans", "helvetica neue";
+        font-weight: 300;
+        margin: 0;
+        background: url('./images/bg.jpg') no-repeat no-repeat center center fixed;
+        background-size: cover;
+    }
+    a, .nav {
+        transition:0.3s;
+    }
+    * {
+        box-sizing:border-box;
+    }
+    .overlay {
+        background:rgba(0, 0, 0, 0.6);
+    }
+    .intro {
+        width: 1170px;
+        margin: auto;
+        height:800px;
+        color: #fff;
+        position: relative;
+    }
+    .intro div.over {
+        position: absolute;
+        top: 50%;
+        margin-top: -125px;
+        height: 250px;
+        width: 800px;
+    }
+    .features {
+        background: whiteSmoke;
+        height: 500px;
+    }
+    .intro h1 {
+        margin: 0;
+        padding: 0;
+        font-weight: 300;
+        font-size: 48px;
+        line-height: 55px;
+    }
+    .intro p {
+        margin-bottom: 40px;
+        font-size: 21px;
+    }
+    .btn {
+        text-decoration: none;
+        padding: 1em;
+        color: #fff;
+        border: 2px solid #fff;
+        text-transform: uppercase;
+        font-weight: 700;
+        font-size: 13px;
+        border-radius: 3px;
+        margin-right: 20px;
+    }
+    .btnPrimary {
+        background: rgb(230, 50, 50);
+        border-color: rgb(230, 50, 50);
+    }
+    .btnPrimary:hover {
+        color: rgb(230, 50, 50) !important;
+        border-color: #fff;
+    }
+    .btn:hover {
+        color: #555;
+        background: #fff;
+    }
+    .nav {
+        position: fixed;
+        top:0px;
+        left: 0px;
+        width: 100%;
+        padding: 2em;
+        z-index: 1000;
+    }
+    .nav div {
+        width: 1170px;
+        margin: auto;
+    }
+    .nav a {
+        text-decoration: none;
+        color: #fff;
+    }
+    .nav.active {
+        background: rgba(53, 58, 67, 0.96);
+        padding: 1.5em;
+    }
+    .brand {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 17px;
+        letter-spacing: 1px;
+    }
+    </style>
 </head>
 
 <body>
-    <div class="header"><a href="/" class="brand">Feedme</a>
+    <div class="nav">
+        <div>
+            <a href="#" class="brand">Feedme</a>
         </div>
     </div>
-    <div class="sidebar">
-        <ul>
-            <li><a href="/">Accueil</a>
-            </li>
-            <li class="active"><a href="#" onClick="accueil();">Dashboard</a>
-            </li>
-        </ul>
-    </div>
-    <div class="search">
-        <input type="text" placeholder="Ex: c154, p298, pomme de terre, 0640561251, user@gmail.com" autofocus>
-    </div>
-    <div class="content">
-        <div class="homeHide"></div>
-        <div class="addHide">
-            <div class="widget">
-                <h2><span class="nP">0</span> <small>produits</small></h2>
-            </div>
-            <div class="widget">
-                <h2><span class="nC">0</span> <small>commandes</small></h2>
-            </div>
-            <div class="widget">
-                <h2><span class="mE">0</span>€ <small>/mois</small></h2>
-            </div>
-            <div class="widget" style="cursor:pointer;" onClick="addProduit();">
-                <h2>Ajouter produit</h2>
-            </div>
-            <div class="widget" style="cursor:pointer;" onClick="addQuantite();">
-                <h2>Ajouter quantité</h2>
+    <div class="overlay">
+        <div class="intro">
+            <div class="over">
+                <h1>Vos produits frais produits localement livrés chez vous</h1>
+                <p> </p>
+                <div class="controls">
+                    <a href="#" class="btn"><i class="fa fa-play"></i> Voir la vidéo</a><a href="#" class="btn btnPrimary">Commencer mes courses</a>
+                </div>
             </div>
         </div>
+    </div>
+    <div class="features">
+
     </div>
     <script type="text/javascript">
-    socket = io('http://localhost');
-    $(document).ready(function() {
-        socket.emit('getInfos', {});
+    $(document).on('scroll', function() {
+        if($(document).scrollTop() > 100) $('.nav').addClass('active');
+        else $('.nav').removeClass('active');
     });
-    $('.search input').keyup(function() {
-        $('.homeHide').html('<h2></h2>');
-        if($(this).val() == '') {
-            accueil();
-        } else if((!isNaN($(this).val()) && ($(this).val().length == 10 || $(this).val().length == 11)) || /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test($(this).val())) {
-            commande($(this).val(), 'user');
-        } else if(/c[0-9]+/.test($(this).val())) {
-            commande($(this).val().replace(/c/, ''));
-        } else if(/p[0-9]+/.test($(this).val())) {
-            produit($(this).val().replace(/p/, ''));
-            $('.content .homeHide').html('<h2></h2>');
-        } else {
-            socket.emit('search', {q:$(this).val()});
-            $('.content .homeHide').html('<h2></h2>');
-        }
-    });
-    function box() {
-        $('.content').addClass('box').addClass('noPadding');
-        $('.addHide').hide();
-    }
-    function commande(id, user) {
-        box();
-        if(!user) socket.emit('commande', {id:id});
-        else socket.emit('commande', {user:id});
-    }
-    function produit(id) {
-        box();
-        socket.emit('produit', {id:id});
-    }
-    function addProduit(id, titre, prix, description) {
-        box();
-        $('.homeHide').text('');
-        if(id) var add = 'Modifier', quantite = '', addPrefix = 'edit', kind = '';
-        else var add = 'Ajouter', quantite = '<input type="text" class="quantite" placeholder="Quantite disponible">', addPrefix = 'add', kind = '<select class="kind"><option value="vegetable">Fruits/Legumes</option><option value="viande">Boucherie</option><option value="lait">Produit laitier</option></select>';
-        if(!titre) var titre = '';
-        if(!id) var id = '';
-        if(!prix) var prix = '';
-        if(!description) var description = '';
-        $('.homeHide').html('<h2>'+add+' un produit</h2><input type="text" class="titre" placeholder="Titre" value="'+titre+'"><input type="text" class="prix" placeholder="Prix" value="'+prix+'"><input type="text" class="description" value="'+description+'" placeholder="Description">'+kind+''+quantite+'<input type="file" id="image"><a onClick="'+addPrefix+'Product('+id+');" href="#" class="btn btnPrimary">'+add+'</a>');
-    }
-    function editRef(id) {
-
-    }
-    function addQuantite(id) {
-        if(!id) var id = '';
-        box();
-        $('.homeHide').text('');
-        $('.homeHide').html('<h2>Ajouter une quantite</h2><input type="text" class="ref" placeholder="Référence" value="p'+id+'"><input type="text" class="quantite" placeholder="Quantite à ajouter"><a href="#" onClick="addQuantity();" class="btn btnPrimary">Ajouter</a>');
-    }
-    function addQuantity() {
-        if(parseInt($('.ref').val().replace(/p/, '')) && !isNaN($('.quantite').val())) {
-            socket.emit('addQuantity', {ref:parseInt($('.ref').val().replace(/p/, '')),q:$('.quantite').val()});
-        } else {
-            swal('Erreur, vérifiez les champs!', '', 'error');
-        }
-    }
-    function deleteRef(id) {
-        socket.emit('deleteRef', {id:id});
-    }
-    function editProduct(id) {
-        if(!isNaN($('.prix').val()) && $('.titre').val() !== '' && $('.prix').val() !== '') {
-            if(document.getElementById('image').files[0]) {
-
-            var file = document.getElementById('image').files[0],
-                          reader = new FileReader();
-                  reader.onload = function(evt){
-                      socket.emit('editProduct', {id:id, prix:$('.prix').val(), titre:$('.titre').val(), description:$('.description').val(), image:evt.target.result});
-                  };
-                  reader.readAsDataURL(file);
-              } else {
-                socket.emit('editProduct', {id:id, prix:$('.prix').val(), titre:$('.titre').val(), description:$('.description').val()});
-              }
-        } else {
-            swal('Erreur, vérifiez les champs!', '', 'error');
-        }
-    }
-    function addProduct() {
-        if(document.getElementById('image').files[0] && !isNaN($('.prix').val()) && !isNaN($('.quantite').val()) && $('.titre').val() !== '' && $('.quantite').val() !== '' && $('.prix').val() !== '') {
-            var file = document.getElementById('image').files[0],
-                          reader = new FileReader();
-                  reader.onload = function(evt){
-                      socket.emit('addProduct', {prix:$('.prix').val(), titre:$('.titre').val(), quantite:$('.quantite').val(), description:$('.description').val(), kind:$('.kind').val(), image:evt.target.result});
-                  };
-                  reader.readAsDataURL(file);
-        } else {
-            swal('Erreur, vérifiez les champs!', '', 'error');
-        }
-    }
-    socket.on('search', function(datas) {
-        $('.homeHide').text('');
-        box();
-        for(var key in datas['rows']) {
-            var data = datas['rows'][key];
-            $('.homeHide').append('<div><h2>p'+data['id']+' — '+data['titre']+' '+data['prix']+'€</h2><p>'+data['description']+'<br/><a href="#" onClick="deleteRef('+data['id']+');" class="btn btnPrimary">Supprimer la référence</a><a href="#" onClick="addProduit('+data['id']+', \''+data['titre']+'\', \''+data['prix']+'\', \''+data['description']+'\');" class="btn">Modifier</a><a href="#" onClick="addQuantite('+data['id']+');" class="btn">Ajouter un stock</a></p><hr/></div>')
-        }
-    });
-    socket.on('commande', function(datas) {
-        for(var key in datas['rows']) {
-            var data = datas['rows'][key];
-            $('.homeHide').append('<div class="c'+data['id']+'"><h2></h2><p></p><table class="detail"></table></div>');
-            if(data['status'] == 0) var status = 'À payer';
-            else if(data['status'] == 1) var status = 'Payé';
-            else if(data['status'] == 2) var status = 'En cours de livraison';
-            else if(data['status'] == 3) var status = 'Livré';
-           $('.c'+data['id']+' h2').html('c'+data['id']+' — '+(data['montant']/100).toFixed(2)+'€ <span class="prix">'+status+'</span>');
-           $('.c'+data['id']+' p').html(data['email']+'<br/>'+data['telephone']);
-           socket.emit('panier', {panier:JSON.parse(data['detail']), call:'detail', idC:data['id']});
-        }
-    });
-    socket.on('detail', function(data) { 
-        $('.c'+data['idC']+' table').text('');
-        for(var key in data['items']) {
-            var row = data['items'][key];
-            $('.c'+data['idC']+' table').append('<tr><td>'+row['titre']+'</td><td>'+row['count']+'</td><td>'+(row['prix']*row['count']).toFixed(2)+'€</td></tr>');
-        }
-        $('.c'+data['idC']+' table').append('<tr class="total"><td>Total</td><td></td><td>'+data['total'].toFixed(2)+'</td></tr>');
-    });
-    socket.on('produit', function(data) {
-        $('.content .homeHide').html('<h2></h2><p></p><span class="quantite"></span>');
-       $('.homeHide h2').html('p'+data['id']+' — '+data['titre']+' <span class="prix">'+parseInt(data['prix']).toFixed(2)+'€</span>');
-       $('.homeHide p').html(data['description']+'<br/><a href="#" onClick="deleteRef('+data['id']+');" class="btn btnPrimary">Supprimer la référence</a><a href="#" onClick="addProduit('+data['id']+', \''+data['titre']+'\', \''+data['prix']+'\', \''+data['description']+'\');" class="btn">Modifier</a><a href="#" onClick="addQuantite('+data['id']+');" class="btn">Ajouter un stock</a>');
-    });
-    socket.on('deleteRef', function(data) {
-       accueil();
-       swal('La référence p'+data['id']+' a bien été supprimée.', '', 'success');
-    });
-    socket.on('noResults', function(data) {
-        box();
-       $('.homeHide h2').html('Aucun résultat');
-    });
-    socket.on('getInfos', function(data) {
-       $('.nP').text(data['np']);
-       $('.nC').text(data['nc']);
-       $('.mE').text(data['me']);
-    });
-    socket.on('editProduct', function (data) {
-        swal('La référence p'+data['id']+' a bien été modifiée.', '', 'success');
-        accueil();
-        $('.search input').focus();
-    });
-    socket.on('addProduct', function (data) {
-        swal('La référence p'+data['id']+' a bien été ajoutée.', '', 'success');
-        accueil();
-        $('.search input').focus();
-    });
-    socket.on('addQuantity', function (data) {
-        swal('La référence p'+data['ref']+' a bien été modifiée.', '', 'success');
-        accueil();
-    });
-    function accueil() {
-        $('.homeHide').text('');
-        $('.addHide').show();
-        $('.content').removeClass('box').removeClass('noPadding');
-    }
-    socket.on('err', function (data) {
-        swal(data['message'], '', 'error');
-    });
-    ( function( $ ) {
-       $( 'a[href="#"]' ).click( function(e) {
-          e.preventDefault();
-       } );
-    } )( jQuery );
     </script>
 </body>
 
