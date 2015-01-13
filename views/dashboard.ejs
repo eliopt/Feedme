@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Feedme</title>
+    <title>Feedme — Dashboard</title>
     <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="./css/style.css">
     <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
@@ -34,7 +34,7 @@
                 <h2><span class="nP">0</span> <small>produits</small></h2>
             </div>
             <div class="widget">
-                <h2><span class="nC">0</span> <small>commandes</small></h2>
+                <h2><span class="nC">0</span> <small>commande(s)</small></h2>
             </div>
             <div class="widget">
                 <h2><span class="mE">0</span>€ <small>/mois</small></h2>
@@ -43,15 +43,22 @@
                 <h2>Ajouter produit</h2>
             </div>
             <div class="widget" style="cursor:pointer;" onClick="addQuantite();">
-                <h2>Ajouter quantité</h2>
+                <h2>Ajouter stock</h2>
+            </div>
+            <div class="widget" style="cursor:pointer;" onClick="commandes();">
+                <h2>Gérer les commandes</h2>
             </div>
         </div>
     </div>
     <script type="text/javascript">
     socket = io('http://localhost');
     $(document).ready(function() {
-        socket.emit('getInfos', {});
+        infos();
     });
+    function infos() {
+        socket.emit('getInfos', {});
+        //setTimeout(infos, 5000);
+    }
     $('.search input').keyup(function() {
         $('.homeHide').html('<h2></h2>');
         if($(this).val() == '') {
@@ -72,6 +79,11 @@
         $('.content').addClass('box').addClass('noPadding');
         $('.addHide').hide();
     }
+    function commandes() {
+        box();
+        $('.homeHide').html('<h2></h2>');
+        socket.emit('commande', {});
+    }
     function commande(id, user) {
         box();
         if(!user) socket.emit('commande', {id:id});
@@ -90,10 +102,16 @@
         if(!id) var id = '';
         if(!prix) var prix = '';
         if(!description) var description = '';
-        $('.homeHide').html('<h2>'+add+' un produit</h2><input type="text" class="titre" placeholder="Titre" value="'+titre+'"><input type="text" class="prix" placeholder="Prix" value="'+prix+'"><input type="text" class="description" value="'+description+'" placeholder="Description">'+kind+''+quantite+'<label class="btn" style="display:block;width:175px;"><i class="fa fa-file"></i> Choisir une vignette<input type="file" id="image"></label><a onClick="'+addPrefix+'Product('+id+');" href="#" class="btn btnPrimary">'+add+'</a>');
+        $('.homeHide').html('<h2>'+add+' un produit</h2><input type="text" class="titre" placeholder="Titre" value="'+titre+'"><input type="text" class="prix" placeholder="Prix" value="'+prix+'"><input type="text" class="description" value="'+description+'" placeholder="Description">'+kind+''+quantite+'<label class="btn" style="display:block;width:195px;"><i class="fa fa-file"></i> Choisir une vignette<input type="file" id="image"></label><a onClick="'+addPrefix+'Product('+id+');" href="#" class="btn btnPrimary">'+add+'</a>'); 
+        $('#image').on('change', function() {
+            $(this).parent().find('i').css('color', 'rgb(230, 50, 50)');
+        });
     }
     function editRef(id) {
 
+    }
+    function status(id, status) {
+        socket.emit('status', {id:id, status:status});
     }
     function addQuantite(id) {
         if(!id) var id = '';
@@ -151,15 +169,21 @@
     socket.on('commande', function(datas) {
         for(var key in datas['rows']) {
             var data = datas['rows'][key];
-            $('.homeHide').append('<div class="c'+data['id']+'"><h2></h2><p></p><table class="detail"></table></div>');
+            $('.homeHide').append('<div class="c'+data['id']+'"><h2></h2><p></p><table class="detail"></table><br/></div>');
             if(data['status'] == 0) var status = 'À payer';
             else if(data['status'] == 1) var status = 'Payé';
-            else if(data['status'] == 2) var status = 'En cours de livraison';
+            else if(data['status'] == 2) var status = 'Préparé';
             else if(data['status'] == 3) var status = 'Livré';
            $('.c'+data['id']+' h2').html('c'+data['id']+' — '+(data['montant']/100).toFixed(2)+'€ <span class="prix">'+status+'</span>');
-           $('.c'+data['id']+' p').html(data['email']+'<br/>'+data['telephone']);
+           if(data['status'] == 1) var up = '<a href="#" onClick="status('+data['id']+', 2);" class="btn">Paquet préparé</a><br/>';
+           else if(data['status'] == 2) var up = '<a href="#" onClick="status('+data['id']+', 3);" class="btn">Paquet envoyé</a><br/>';
+           else var up = '';
+           $('.c'+data['id']+' p').html(''+up+'<a href="mailto:'+data['email']+'">'+data['email']+'</a><br/><a href="tel:'+data['telephone']+'">'+data['telephone']+'</a>');
            socket.emit('panier', {panier:JSON.parse(data['detail']), call:'detail', idC:data['id']});
         }
+    });
+    socket.on('status', function(data) {
+        accueil();
     });
     socket.on('detail', function(data) { 
         $('.c'+data['idC']+' table').text('');
@@ -171,7 +195,7 @@
     });
     socket.on('produit', function(data) {
         $('.content .homeHide').html('<h2></h2><p></p><span class="quantite"></span>');
-       $('.homeHide h2').html('p'+data['id']+' — '+data['titre']+' <span class="prix">'+parseInt(data['prix']).toFixed(2)+'€</span>');
+       $('.homeHide h2').html('p'+data['id']+' — '+data['titre']+' <span class="prix">'+parseFloat(data['prix']).toFixed(2)+'€</span>');
        $('.homeHide p').html(data['description']+'<br/><a href="#" onClick="deleteRef('+data['id']+');" class="btn btnPrimary">Supprimer la référence</a><a href="#" onClick="addProduit('+data['id']+', \''+data['titre']+'\', \''+data['prix']+'\', \''+data['description']+'\');" class="btn">Modifier</a><a href="#" onClick="addQuantite('+data['id']+');" class="btn">Ajouter un stock</a>');
     });
     socket.on('deleteRef', function(data) {
@@ -190,15 +214,18 @@
     socket.on('editProduct', function (data) {
         swal('La référence p'+data['id']+' a bien été modifiée.', '', 'success');
         accueil();
+        infos();
         $('.search input').focus();
     });
     socket.on('addProduct', function (data) {
         swal('La référence p'+data['id']+' a bien été ajoutée.', '', 'success');
         accueil();
+        infos();
         $('.search input').focus();
     });
     socket.on('addQuantity', function (data) {
         swal('La référence p'+data['ref']+' a bien été modifiée.', '', 'success');
+        infos();
         accueil();
     });
     function accueil() {
