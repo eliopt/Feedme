@@ -2,7 +2,7 @@ html {
     height: 100%;
 }
 body {
-    font-family: wf_segoe-ui_light,wf_segoe-ui_normal,"Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
     font-weight: 100;
     margin: 0;
     background: #eee;
@@ -17,6 +17,13 @@ img {
 .item div, a {
     transition:0.5s;
     text-decoration: none;
+}
+.content.box a {
+    color: rgb(230, 50, 50);
+    border-bottom: 1px dashed rgb(230, 50, 50);
+}
+h2:empty {
+    display: none;
 }
 * {
     margin: 0;
@@ -84,6 +91,7 @@ tr {
     background: #272b35;
     border-bottom: 1px solid #232730;
     z-index: 10;
+    height: 68px;
 }
 .panier {
     position: fixed;
@@ -114,7 +122,9 @@ tr {
 .brand {
     color: #fff;
     text-decoration: none;
-    font-size: 30px;
+    font-size: 25px;
+    display: inline-block;
+    margin-top: 5px;
     cursor: default;
 }
 select {
@@ -126,7 +136,6 @@ select {
     outline: none;
 }
 .detail {
-    margin-bottom: 1em;
     margin-left: -16px;
     width: calc(100% + 32px);
     position: relative;
@@ -328,21 +337,22 @@ input[type=file] {
 }
 .btn {
     background: whiteSmoke;
+    border: 0 !important;
     padding: 10px;
     border-radius: 3px;
     text-decoration: none;
     cursor: pointer;
     border: 0;
     margin-right: 10px;
-    color: #555;
+    color: #555 !important;
     font-weight: 100;
     font-size: 17px;
     margin-top: 10px;
-    font-family: "helvetica neue"
+    font-family: "open sans"
 }
 .btn.btnPrimary {
     background: rgba(230, 50, 50, 1) !important;
-    color: #fff;
+    color: #fff !important;
 }
 .modal {
     display: none;
@@ -376,13 +386,17 @@ input[type=file] {
     font-size: 14px;
     height: 39px;
     margin-right: -1px;
-    display: inline-block;
+    display: inline;
 }
 .modal .modalContent .controls .btn {
     border-bottom-left-radius: 0px;
     border-top-left-radius: 0px;
-    display: inline-block;
-    height: 39px;
+    margin: 0;
+    display: inline;
+    margin-top: 3px;
+    position: relative;
+    padding: 8px;
+    padding-top: 7px;
 }
 .modal .modalContent .close {
     position: absolute;
