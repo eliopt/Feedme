@@ -1,67 +1,14 @@
-<!DOCTYPE html>
-<html>
-
+<!doctype html>
+<html lang="fr">
 <head>
-    <title>Feedme</title>
-    <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="./css/style.css">
-    <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
-    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+  <meta charset="utf-8">
+  <title>Centrocar — Erreur 404</title>
+  <link rel="stylesheet" href="./css/style.css">
 </head>
-
-<body>
-    <div class="header"><a href="/" class="brand">Feedme</a>
-        <div class="panier"><a href="panier.html"><i class="fa fa-shopping-cart"></i><span>3</span></a>
-        </div>
-    </div>
-    <div class="sidebar">
-        <ul>
-            <li class="active"><a href="#">Fruits/Légumes</a>
-            </li>
-            <li><a href="#">Boucherie</a>
-            </li>
-            <li><a href="#">Produits laitiers</a>
-            </li>
-        </ul>
-    </div>
-    <div class="modal">
-        <div class="back" onClick="$('.modal').hide();"></div>
-        <div class="modalContent">
-            <img src="bg.jpg" alt="">
-            <a href="#" onClick="$('.modal').hide();" class="close">&times;</a>
-            <div class="controls">
-                <input type="text" placeholder="1kg"><a href="#" class="btn btnPrimary"><i class="fa fa-shopping-cart"></i></a>
-            </div>
-            <h2>Titre produit</h2>
-            <p>Description produit</p>
-        </div>
-    </div>
-    <div class="content">
-        <div class="item" onClick="$('.modal').show();">
-            <div><img src="bg.jpg" alt=""><h3>Titre produit</h3></a>
-                <p>Description produit</p>
-            </div>
-        </div>
-    </div>
-    <script type="text/javascript">
-    $('img').each(function () {
-       $(this).css('backgroundImage', 'url("'+$(this).attr('src')+'")').attr('src', ''); 
-    });
-    $('.sidebar ul li a').click(function() {
-        if(!$(this).parent().hasClass('active')) {
-            $('.sidebar ul li.active').removeClass('active');
-            $(this).parent().addClass('active');
-        }
-    });
-    socket = io('http://localhost');
-    $(document).ready(function() {
-        socket.emit('getItems', {kind: 'vegetables'});
-    });
-    socket.on('getItems', function (data) {
-        alert(data['items']);
-    });
-    </script>
+<body class="nFound">
+	<div class="content">
+		<h1>404</h1>
+		<p>La page que vous avez demandée n'a pu être trouvée.</p>
+	</div>
 </body>
-
 </html>
