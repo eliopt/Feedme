@@ -14,7 +14,7 @@ var connection = mysql.createConnection({
     user: 'emmanuelcoppey',
     password: 'azerty',
     database: 'feedme',
-    port:8889
+    port: 8889
 });
 connection.connect();
 
@@ -52,7 +52,7 @@ app.use(cookieParser)
             res.render('index.ejs', {});
         else res.render('intro.ejs', {});
         res.cookie('nNew', '1', {
-            maxAge: 60*60*60*24*65,
+            maxAge: 60 * 60 * 60 * 24 * 65,
             httpOnly: true
         });
     })
@@ -64,7 +64,7 @@ app.use(cookieParser)
             res.render('index.ejs', {});
         else res.render('intro.ejs', {});
         res.cookie('nNew', '1', {
-            maxAge: 60*60*60*24*65,
+            maxAge: 60 * 60 * 60 * 24 * 65,
             httpOnly: true
         });
     })
@@ -404,7 +404,7 @@ io.on('connection', function(socket) {
         });
     });
     socket.on('status', function(post) {
-        connection.query('UPDATE commandes SET status = '+post['status']+' WHERE id = '+post['id']+'', function(err, rows) {
+        connection.query('UPDATE commandes SET status = ' + post['status'] + ' WHERE id = ' + post['id'] + '', function(err, rows) {
             if (!err) {
                 socket.emit('status', {});
             } else {
