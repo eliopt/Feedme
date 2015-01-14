@@ -18,6 +18,25 @@ img {
     transition:0.5s;
     text-decoration: none;
 }
+.content:empty:after {
+    content: "\f1ce";
+    -webkit-animation: fa-spin 2s infinite linear;
+    animation: fa-spin 2s infinite linear;
+    display: block;
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: 200px;
+    color: #ccc;
+    width: 200px;
+    position: absolute;
+    left: 50%;
+    margin-left: -100px;
+    text-align: center;
+    margin-top: 100px;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
 .content.box a {
     color: rgb(230, 50, 50);
     border-bottom: 1px dashed rgb(230, 50, 50);
