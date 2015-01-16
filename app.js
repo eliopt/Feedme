@@ -1,3 +1,4 @@
+//---includes/connexions
 var http = require('http');
 var express = require('express');
 var app = express();
@@ -17,7 +18,7 @@ var connection = mysql.createConnection({
     //port: 8889
 });
 connection.connect();
-
+//---fonctions
 //transforme data url en image
 function decodeBase64Image(dataString) {
     var matches = dataString.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/),
@@ -36,6 +37,7 @@ function extractFromAdress(components, type) {
             if (components[i].types[j] == type) return components[i].long_name;
     return "";
 }
+//---routes http
 app.use(cookieParser)
     .use(session({
         secret: 'zetezt',
@@ -85,6 +87,7 @@ app.use(cookieParser)
 var server = http.createServer(app).listen(8080, function() { //creation du serveur http
     console.log('Feedme lancé');
 });
+//---communication avec le client
 var io = require('socket.io').listen(server);
 io.on('connection', function(socket) {
     //-- methodes de index.ejs
