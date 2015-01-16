@@ -28,12 +28,13 @@
         box-sizing:border-box;
     }
     .overlay {
-        background:rgba(0, 0, 0, 0.6);
+        background:rgba(0, 0, 0, 0.5);
+        height: 90%;
     }
     .intro {
         width: 1170px;
         margin: auto;
-        height:800px;
+        height:100%;
         color: #fff;
         position: relative;
     }
@@ -45,8 +46,8 @@
         width: 800px;
     }
     .features {
-        background: whiteSmoke;
-        height: 500px;
+        background: #fff;
+        padding: 1em;
     }
     .intro h1 {
         margin: 0;
@@ -108,6 +109,37 @@
         font-size: 17px;
         letter-spacing: 1px;
     }
+    .features div {
+        width: 1170px;
+        margin: auto;
+    }
+    .features div.feature {
+        width: 33.3%;
+        margin-right: -4px;
+        display: inline-block;
+        text-align: center;
+        padding: 2em;
+    }
+    .feature h2 {
+        font-size: 23px;
+        line-height: 32px;
+        font-weight: 400;
+        color: #353535;
+    }
+    .feature p {
+        color: #727272;
+        font-size: 16px;
+        line-height: 28px;
+        font-weight: 400;
+    }
+    .feature .nbr {
+        font-style: normal;
+        font-size: 40px;
+        background: #ddd;
+        color: #555;
+        padding: 3px 18px 3px 18px;
+        border-radius: 50%;
+    }
     </style>
 </head>
 
@@ -120,16 +152,32 @@
     <div class="overlay">
         <div class="intro">
             <div class="over">
-                <h1>Vos produits frais produits localement livrés chez vous</h1>
-                <p> </p>
+                <h1>Finalement Paris et la campagne ne sont pas si éloignées</h1>
+                <p>Vos produits frais de producteurs locaux livrés chez vous gratuitement.</p>
                 <div class="controls">
-                    <a href="#" class="btn"><i class="fa fa-play"></i> Voir la vidéo</a><a href="#" class="btn btnPrimary">Commencer mes courses</a>
+                    <a href="#" class="btn"><i class="fa fa-play"></i> Voir la vidéo</a><a href="courses" class="btn btnPrimary">Commencer mes courses</a>
                 </div>
             </div>
         </div>
     </div>
     <div class="features">
-
+        <div>
+            <div class="feature">
+                <i class="nbr">1</i>
+                <h2>Ils produisent</h2>
+                <p>Nos producteurs sélectionnés cultivent vos produits frais dans leurs terres d'Ile de France.</p>
+            </div>
+            <div class="feature">
+                <i class="nbr">2</i>
+                <h2>Nous centralisons</h2>
+                <p>Vos produits sont regroupé des différentes fermes jusque dans notre entrepot où ils sont conservés avec attention.</p>
+            </div>
+            <div class="feature">
+                <i class="nbr">3</i>
+                <h2>Nous vous livrons</h2>
+                <p>Vous nous passez notre commande, nous emballons la marchandise qui vous est livrée jusqu'à votre porte... gratuitement.</p>
+            </div>
+        </div>
     </div>
     <script type="text/javascript">
     $(document).on('scroll', function() {
