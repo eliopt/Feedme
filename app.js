@@ -11,10 +11,10 @@ var gm = require('googlemaps');
 var stripe = require("stripe")("sk_test_TgKHpDlEbm8d2pU7eCwocNZA");
 var connection = mysql.createConnection({
     host: 'localhost',
-    user: 'emmanuelcoppey',
-    password: 'azerty',
+    user: 'root',
+    password: '',
     database: 'feedme',
-    port: 8889
+    //port: 8889
 });
 connection.connect();
 
@@ -44,29 +44,16 @@ app.use(cookieParser)
     })).get('/dashboard', function(req, res) {
         session = req.session;
         res.render('dashboard.ejs', {});
-    }).get('/', function(req, res) {
+    }).get('/courses', function(req, res) {
         session = req.session;
         if (session.panier === undefined) session.panier = [];
         if (session.me === undefined) session.me = [];
-        if (!req.cookies.nNew)
-            res.render('index.ejs', {});
-        else res.render('intro.ejs', {});
-        res.cookie('nNew', '1', {
-            maxAge: 60 * 60 * 60 * 24 * 65,
-            httpOnly: true
-        });
+        res.render('index.ejs', {});
+    }).get('/', function(req, res) {
+        res.render('intro.ejs', {});
     })
     .get('', function(req, res) {
-        session = req.session;
-        if (session.panier === undefined) session.panier = [];
-        if (session.me === undefined) session.me = [];
-        if (req.cookies.nNew)
-            res.render('index.ejs', {});
-        else res.render('intro.ejs', {});
-        res.cookie('nNew', '1', {
-            maxAge: 60 * 60 * 60 * 24 * 65,
-            httpOnly: true
-        });
+        res.render('intro.ejs', {});
     })
     .get('/:dir/:file', function(req, res) {
         var dir = req.params.dir;
