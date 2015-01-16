@@ -8,7 +8,7 @@ var cookieParser = require('cookie-parser');
 var cookieParser = cookieParser('your secret sauce');
 var sessionStore = new session.MemoryStore();
 var gm = require('googlemaps');
-var stripe = require("stripe")("sk_test_TgKHpDlEbm8d2pU7eCwocNZA");
+var stripe = require("stripe")("sk_test_TgKHpDlEbm8d2pU7eCwocNZA"); //clef api stripe
 var connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
@@ -18,6 +18,7 @@ var connection = mysql.createConnection({
 });
 connection.connect();
 
+//transforme data url en image
 function decodeBase64Image(dataString) {
     var matches = dataString.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/),
         response = {};
@@ -28,7 +29,7 @@ function decodeBase64Image(dataString) {
     response.data = new Buffer(matches[2], 'base64');
     return response;
 }
-
+//extraire partie adresse depuis l'api google
 function extractFromAdress(components, type) {
     for (var i = 0; i < components.length; i++)
         for (var j = 0; j < components[i].types.length; j++)
@@ -41,21 +42,21 @@ app.use(cookieParser)
         store: sessionStore,
         resave: true,
         saveUninitialized: true
-    })).get('/dashboard', function(req, res) {
+    })).get('/dashboard', function(req, res) { //route pour le dashboard
         session = req.session;
         res.render('dashboard.ejs', {});
-    }).get('/courses', function(req, res) {
+    }).get('/courses', function(req, res) { //route pour le supermarché
         session = req.session;
         if (session.panier === undefined) session.panier = [];
         if (session.me === undefined) session.me = [];
         res.render('index.ejs', {});
-    }).get('/', function(req, res) {
+    }).get('/', function(req, res) { //route pour la presentation
         res.render('intro.ejs', {});
     })
-    .get('', function(req, res) {
+    .get('', function(req, res) { //idem
         res.render('intro.ejs', {});
     })
-    .get('/:dir/:file', function(req, res) {
+    .get('/:dir/:file', function(req, res) { //routes pour les fichiers à inclure
         var dir = req.params.dir;
         if (dir == 'js' || dir == 'css' || dir == 'img' || dir == 'images') {
             fs.readFile('./' + req.params.dir + '/' + req.params.file + '', function read(err, data) {
@@ -77,43 +78,53 @@ app.use(cookieParser)
     })
     .use(function(req, res, next) {
         res.status(404);
-        res.render('404.ejs', {
+        res.render('404.ejs', { //route pour l'erreur 404
             url: req.url
         });
     });
-var server = http.createServer(app).listen(8080, function() {
-    console.log("Express server listening on port 8080");
+var server = http.createServer(app).listen(8080, function() { //creation du serveur http
+    console.log('Feedme lancé');
 });
 var io = require('socket.io').listen(server);
 io.on('connection', function(socket) {
-    socket.on('panierCount', function(data) {
+    //-- methodes de index.ejs
+    //methodes concernant le panier
+    socket.on('addPanier', function(post) { //ajoute un produit au panier
+        connection.query('SELECT * FROM produits WHERE id = "' + post['id'] + '"', function(err, rows) {
+            if (!err) {
+                if (rows[0]['quantite'] >= post['count']) {
+                    var ok = 0;
+                    for (var key in session.panier) {
+                        if (session.panier[key]['id'] == post['id']) {
+                            ok = 1;
+                            session.panier[key]['count'] = parseInt(session.panier[key]['count']) + parseInt(post['count']);
+                        }
+                    }
+                    if (ok == 0) {
+                        session.panier.push(post);
+                    }
+                    if (session.panier.length == 0) {
+                        session.panier.push(post);
+                    }
+                    session.save();
+                } else {
+                    socket.emit('err', {
+                        message: 'Le produit n\'existe pas dans ces quantités.'
+                    });
+                }
+            } else  {
+                console.log(err);
+            }
+        });
+    });
+    socket.on('panierCount', function(data) { //compte des éléments du paniers pour la notif
         if (session.panier !== undefined) var panierLength = session.panier.length;
         if (panierLength == 0) panierLength = '';
         socket.emit('panierCount', {
             panierCount: panierLength
         });
     });
-    socket.on('getItems', function(post) {
-        connection.query('SELECT * FROM produits WHERE kind = "' + post['kind'] + '" AND quantite != 0', function(err, rows) {
-            if (!err) {
-                socket.emit('getItems', {
-                    items: rows
-                });
-            } else {
-                console.log(err);
-            }
-        });
-    });
-    socket.on('caisse', function(post) {
-        if (session.total >= 35) {
-            socket.emit('caisse', {});
-        } else {
-            socket.emit('err', {
-                message: 'Vous devez commander au moins 35€.'
-            });
-        }
-    });
-    socket.on('panierDelete', function(post) {
+    socket.on('panierDelete', function(post) { //supprime un element du panier
         for (var key in session.panier) {
             if (session.panier[key]['id'] == post['id']) {
                 session.panier.splice(key, 1);
@@ -124,71 +135,7 @@ io.on('connection', function(socket) {
             }
         }
     });
-    socket.on('perso', function(post) {
-        if (post['adresse'] && !isNaN(post['cp']) && post['cp'].length == 5) {
-            gm.geocode(post['adresse'] + ' ' + post['cp'], function(err, data) {
-                if (!err) {
-                    if (extractFromAdress(data['results'][0].address_components, "locality") == 'Paris') {
-                        socket.emit('perso', {});
-                        session.me['adresse'] = post['adresse'];
-                        session.me['nom'] = post['nom'];
-                        session.me['cp'] = post['cp'];
-                        session.save();
-                    } else {
-                        socket.emit('err', {
-                            message: 'Feedme ne livre pour le moment qu\'à Paris!'
-                        });
-                    }
-                } else {
-                    console.log(err);
-                }
-            });
-        } else {
-            socket.emit('err', {
-                message: 'Les données semblent être erronées!'
-            });
-        }
-    });
-    socket.on('checkout', function(post) {
-        if (!isNaN(post['telephone']) && (post['telephone'].length == 10 || post['telephone'].length == 11) && /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(post['email']))  {
-            socket.emit('checkout', {});
-            session.me['telephone'] = post['telephone'];
-            session.me['email'] = post['email'];
-            session.save();
-            connection.query('INSERT INTO commandes(email, adresse, montant, detail, telephone, status, time, nom) VALUES("' + session.me['email'] + '", "' + session.me['adresse'] + ' ' + session.me['cp'] + '", "' + session.total * 100 + '", \'' + JSON.stringify(session.panier).replace(/'/g, "\\'") + '\', "' + session.me['telephone'] + '", 0, "' + new Date().getTime() + '", "' + session.me['nom'] + '")', function(err, infos) {
-                if (!err) {
-                    session.idCommande = infos.insertId;
-                    session.save();
-                } else {
-                    console.log(err);
-                }
-            });
-            var i = 0;
-            for (var key in session.panier) {
-                var row = session.panier[key];
-                connection.query('SELECT * FROM produits WHERE id = "' + row['id'] + '"', function(err, rows) {
-                    if (!err) {
-                        var quantite = rows[0]['quantite'];
-                        var roww = session.panier[i];
-                        quantite = quantite - roww['count'];
-                        i++;
-                        connection.query('UPDATE produits SET quantite = "' + quantite + '" WHERE id = "' + roww['id'] + '"', function(err, rows) {
-                            if (!err) {} else {
-                                console.log(err);
-                            }
-                        });
-                    } else  {
-                        console.log(err);
-                    }
-                });
-            }
-        } else {
-            socket.emit('err', {
-                message: 'Les données semblent être erronées!'
-            });
-        }
-    });
-    socket.on('panier', function(post) {
+    socket.on('panier', function(post) { //retourne le contenu du panier
         var items = [];
         var total = 0;
         var i = 0;
@@ -236,7 +183,85 @@ io.on('connection', function(socket) {
             }
         }
     });
-    socket.on('payer', function(post) {
+    socket.on('panierClear', function(post) { //vide le panier
+        session.panier = [];
+        session.save();
+    });
+    //entonnoir de conversion
+    socket.on('caisse', function(post) { // verifie l'etape montant pour le paiement
+        if (session.total >= 35) {
+            socket.emit('caisse', {});
+        } else {
+            socket.emit('err', {
+                message: 'Vous devez commander au moins 35€.'
+            });
+        }
+    });
+    socket.on('perso', function(post) { //verifie l'adresse pour le paiement
+        if (post['adresse'] && !isNaN(post['cp']) && post['cp'].length == 5) {
+            gm.geocode(post['adresse'] + ' ' + post['cp'], function(err, data) {
+                if (!err) {
+                    if (extractFromAdress(data['results'][0].address_components, "locality") == 'Paris') {
+                        socket.emit('perso', {});
+                        session.me['adresse'] = post['adresse'];
+                        session.me['nom'] = post['nom'];
+                        session.me['cp'] = post['cp'];
+                        session.save();
+                    } else {
+                        socket.emit('err', {
+                            message: 'Feedme ne livre pour le moment qu\'à Paris!'
+                        });
+                    }
+                } else {
+                    console.log(err);
+                }
+            });
+        } else {
+            socket.emit('err', {
+                message: 'Les données semblent être erronées!'
+            });
+        }
+    });
+    socket.on('checkout', function(post) { //verifie les donnees personnelles pour le paiement
+        if (!isNaN(post['telephone']) && (post['telephone'].length == 10 || post['telephone'].length == 11) && /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(post['email']))  {
+            socket.emit('checkout', {});
+            session.me['telephone'] = post['telephone'];
+            session.me['email'] = post['email'];
+            session.save();
+            connection.query('INSERT INTO commandes(email, adresse, montant, detail, telephone, status, time, nom) VALUES("' + session.me['email'] + '", "' + session.me['adresse'] + ' ' + session.me['cp'] + '", "' + session.total * 100 + '", \'' + JSON.stringify(session.panier).replace(/'/g, "\\'") + '\', "' + session.me['telephone'] + '", 0, "' + new Date().getTime() + '", "' + session.me['nom'] + '")', function(err, infos) {
+                if (!err) {
+                    session.idCommande = infos.insertId;
+                    session.save();
+                } else {
+                    console.log(err);
+                }
+            });
+            var i = 0;
+            for (var key in session.panier) {
+                var row = session.panier[key];
+                connection.query('SELECT * FROM produits WHERE id = "' + row['id'] + '"', function(err, rows) {
+                    if (!err) {
+                        var quantite = rows[0]['quantite'];
+                        var roww = session.panier[i];
+                        quantite = quantite - roww['count'];
+                        i++;
+                        connection.query('UPDATE produits SET quantite = "' + quantite + '" WHERE id = "' + roww['id'] + '"', function(err, rows) {
+                            if (!err) {} else {
+                                console.log(err);
+                            }
+                        });
+                    } else  {
+                        console.log(err);
+                    }
+                });
+            }
+        } else {
+            socket.emit('err', {
+                message: 'Les données semblent être erronées!'
+            });
+        }
+    });
+    socket.on('payer', function(post) { //paye via l'api stripe
         var stripeToken = post.token;
         var charge = stripe.charges.create({
             amount: session.total * 100, // amount in cents, again
@@ -259,11 +284,21 @@ io.on('connection', function(socket) {
             }
         });
     });
-    socket.on('panierClear', function(post) {
-        session.panier = [];
-        session.save();
+    //fin de l'entonnoir
+    socket.on('getItems', function(post) { //retourne les produits en fonction du genre
+        connection.query('SELECT * FROM produits WHERE kind = "' + post['kind'] + '" AND quantite != 0', function(err, rows) {
+            if (!err) {
+                socket.emit('getItems', {
+                    items: rows
+                });
+            } else {
+                console.log(err);
+            }
+        });
     });
-    socket.on('addProduct', function(post) {
+    //-- methodes du dashboard.ejs
+    //modif
+    socket.on('addProduct', function(post) { //ajoute un produit a la db
         connection.query('INSERT INTO produits(titre, prix, description, provenance, kind, quantite) VALUES("' + post['titre'] + '","' + post['prix'] + '","' + post['description'] + '","Ile de France","' + post['kind'] + '","' + post['quantite'] + '")', function(err, infos) {
             if (!err) {
                 var base64Data = decodeBase64Image(post.image);
@@ -281,7 +316,7 @@ io.on('connection', function(socket) {
             }
         });
     });
-    socket.on('editProduct', function(post) {
+    socket.on('editProduct', function(post) { //modifie un produit dans la db
         connection.query('UPDATE produits SET titre = "' + post['titre'] + '", prix = "' + post['prix'] + '", description = "' + post['description'] + '" WHERE id = ' + post['id'] + '', function(err, infos) {
             if (!err) {
                 if (post.image) {
@@ -306,7 +341,22 @@ io.on('connection', function(socket) {
             }
         });
     });
-    socket.on('addQuantity', function(post) {
+    socket.on('deleteRef', function(post) { //supprime un produit de la db
+        connection.query('DELETE FROM produits WHERE id = "' + post['id'] + '"', function(err, rows) {
+            if (!err) {
+                fs.unlink(__dirname + '/img/' + post['id'] + '.png', function(err) {
+                    if (!err) {
+                        socket.emit('deleteRef', {
+                            id: post['id']
+                        });
+                    }
+                });
+            } else {
+                console.log(err);
+            }
+        });
+    });
+    socket.on('addQuantity', function(post) { //ajoute un stock a un produit
         connection.query('SELECT * FROM produits WHERE id = "' + post['ref'] + '"', function(err, rows) {
             if (!err) {
                 var quantite = parseInt(rows[0]['quantite']) + parseInt(post['q']);
@@ -324,22 +374,17 @@ io.on('connection', function(socket) {
             }
         });
     });
-    socket.on('deleteRef', function(post) {
-        connection.query('DELETE FROM produits WHERE id = "' + post['id'] + '"', function(err, rows) {
+    socket.on('status', function(post) { //change le status d'une commande
+        connection.query('UPDATE commandes SET status = ' + post['status'] + ' WHERE id = ' + post['id'] + '', function(err, rows) {
             if (!err) {
-                fs.unlink(__dirname + '/img/' + post['id'] + '.png', function(err) {
-                    if (!err) {
-                        socket.emit('deleteRef', {
-                            id: post['id']
-                        });
-                    }
-                });
+                socket.emit('status', {});
             } else {
                 console.log(err);
             }
         });
     });
-    socket.on('produit', function(post) {
+    //affichage
+    socket.on('produit', function(post) {//retourne les infos d'un produit
         connection.query('SELECT * FROM produits WHERE id = "' + post['id'] + '"', function(err, rows) {
             if (!err) {
                 if (rows[0]) socket.emit('produit', {
@@ -356,7 +401,7 @@ io.on('connection', function(socket) {
             }
         });
     });
-    socket.on('search', function(post) {
+    socket.on('search', function(post) { //recherche dans la table produits
         connection.query('SELECT * FROM produits WHERE titre LIKE "%' + post['q'] + '%"', function(err, rows) {
             if (!err) {
                 if (rows[0]) socket.emit('search', {
@@ -368,7 +413,7 @@ io.on('connection', function(socket) {
             }
         });
     });
-    socket.on('commande', function(post) {
+    socket.on('commande', function(post) { //retourne les commandes pour différents critères
         if (post['id']) var q = 'SELECT * FROM commandes WHERE id = "' + post['id'] + '"';
         else if (post['user']) {
             if (/^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(post['user'])) {
@@ -390,16 +435,7 @@ io.on('connection', function(socket) {
             }
         });
     });
-    socket.on('status', function(post) {
-        connection.query('UPDATE commandes SET status = ' + post['status'] + ' WHERE id = ' + post['id'] + '', function(err, rows) {
-            if (!err) {
-                socket.emit('status', {});
-            } else {
-                console.log(err);
-            }
-        });
-    });
-    socket.on('getInfos', function(post) {
+    socket.on('getInfos', function(post) { //retourne les infos de bases pour les stats du dashboard
         var nP = 0,
             nC = 0,
             mE = 0,
@@ -437,34 +473,6 @@ io.on('connection', function(socket) {
                 me: mE,
                 nc: nC
             });
-        });
-    });
-    socket.on('addPanier', function(post) {
-        connection.query('SELECT * FROM produits WHERE id = "' + post['id'] + '"', function(err, rows) {
-            if (!err) {
-                if (rows[0]['quantite'] >= post['count']) {
-                    var ok = 0;
-                    for (var key in session.panier) {
-                        if (session.panier[key]['id'] == post['id']) {
-                            ok = 1;
-                            session.panier[key]['count'] = parseInt(session.panier[key]['count']) + parseInt(post['count']);
-                        }
-                    }
-                    if (ok == 0) {
-                        session.panier.push(post);
-                    }
-                    if (session.panier.length == 0) {
-                        session.panier.push(post);
-                    }
-                    session.save();
-                } else {
-                    socket.emit('err', {
-                        message: 'Le produit n\'existe pas dans ces quantités.'
-                    });
-                }
-            } else  {
-                console.log(err);
-            }
         });
     });
 });
