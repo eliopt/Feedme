@@ -7,6 +7,7 @@ body {
     margin: 0;
     background: #eee;
     padding: 0;
+    letter-spacing: 1px;
     color: #555;
 }
 img {
@@ -273,7 +274,7 @@ hr {
     padding-left: 20px;
     font-size: 25px;
     font-weight: 100 !important;
-    font-family: "helvetica neue";
+    font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
     color: #777;
 }
 .content .item {
@@ -368,7 +369,7 @@ input[type=file] {
     font-weight: 100;
     font-size: 17px;
     margin-top: 10px;
-    font-family: "open sans"
+    font-family: "Open Sans","Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 .btn.btnPrimary {
     background: rgba(230, 50, 50, 1) !important;
