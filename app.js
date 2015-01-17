@@ -289,7 +289,7 @@ io.on('connection', function(socket) {
     });
     //fin de l'entonnoir
     socket.on('getItems', function(post) { //retourne les produits en fonction du genre
-        connection.query('SELECT * FROM produits WHERE kind = "' + post['kind'] + '" AND quantite != 0', function(err, rows) {
+        connection.query('SELECT * FROM produits WHERE kind = "' + post['kind'] + '" AND quantite != 0 ORDER BY titre ASC', function(err, rows) {
             if (!err) {
                 socket.emit('getItems', {
                     items: rows
