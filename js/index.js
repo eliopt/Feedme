@@ -105,6 +105,11 @@ function imgBack() {
 function falseDisable() {
     $('button.btn').attr('disabled', false);
 }
+function keyup() {
+    $('input').keyup(function(e) {
+        if(e.keyCode == 13) $('button.btn').click();
+    });
+}
 function gridify() {
     var options = {
         srcNode: '.item', // grid items (class, node)
@@ -173,15 +178,18 @@ socket.on('caisse', function(data) {
     $('.content').addClass('box');
     $('.status').text('Payement');
     $('.content').html('<h2>Adresse de livraison</h2><input class="nom" type="text" placeholder="Nom"><input type="text" class="adresse" placeholder="Adresse"><input type="text" class="cp" placeholder="Code postal"><input type="text" value="Paris" readonly><input type="text" value="France" readonly><button onClick="perso();$(this).attr(\'disabled\', \'true\');" class="btn btnPrimary">Suivant <i class="fa fa-angle-right"></i></button>');
+    keyup();
 });
 socket.on('panierDelete', function(data) {
     panier();
 });
 socket.on('perso', function(data) {
     $('.box').html('<h2>Informations personnelles</h2><input class="email" type="text" placeholder="Email"><input class="telephone" type="text" placeholder="Telephone"><button onClick="checkout();$(this).attr(\'disabled\', \'true\');" class="btn btnPrimary">Payer <i class="fa fa-angle-right"></i></button>');
+    keyup();
 });
 socket.on('checkout', function(data) {
     $('.box').html('<h2>Informations de payement</h2><input type="text" class="card-number" placeholder="Numéro de carte"><input type="text" class="card-cvc" placeholder="Numéro d\'identification"><input type="text" class="card-month" placeholder="Mois d\'expiration"><input type="text" class="card-year" placeholder="Année d\'expiration"><button onClick="payer();$(this).attr(\'disabled\', \'true\');" class="btn btnPrimary">Payer <i class="fa fa-angle-right"></i></button>');
+    keyup();
 });
 $('#search').keyup(function() {
     $('.content div h3:contains(' + $(this).val() + ')').parent().parent().addClass('item').show();
