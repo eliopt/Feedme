@@ -1,0 +1,135 @@
+html {
+    height: 100%;
+}
+body {
+    height: 100%;
+    font-family: "open sans", "helvetica neue";
+    font-weight: 300;
+    margin: 0;
+    background: url('../images/bg.jpg') no-repeat no-repeat center center fixed;
+    background-size: cover;
+}
+a, .nav {
+    transition: 0.3s;
+}
+* {
+    box-sizing: border-box;
+}
+.overlay {
+    background: rgba(0, 0, 0, 0.5);
+    height: 90%;
+}
+.intro {
+    width: 1170px;
+    margin: auto;
+    height: 100%;
+    color: #fff;
+    position: relative;
+}
+.intro div.over {
+    position: absolute;
+    top: 50%;
+    margin-top: -125px;
+    height: 250px;
+    width: 800px;
+}
+.features {
+    background: #fff;
+    padding: 1em;
+}
+.intro h1 {
+    margin: 0;
+    padding: 0;
+    font-weight: 300;
+    font-size: 48px;
+    line-height: 55px;
+}
+.intro p {
+    margin-bottom: 40px;
+    font-size: 21px;
+}
+.btn {
+    text-decoration: none;
+    padding: 1em;
+    color: #fff;
+    border: 2px solid #fff;
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 13px;
+    border-radius: 3px;
+    margin-right: 20px;
+}
+.btnPrimary {
+    background: rgb(230, 50, 50);
+    border-color: rgb(230, 50, 50);
+}
+.btnPrimary:hover {
+    color: rgb(230, 50, 50) !important;
+    border-color: #fff;
+}
+.btn:hover {
+    color: #555;
+    background: #fff;
+}
+.nav {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    padding: 2em;
+    z-index: 1000;
+}
+.nav div {
+    width: 1170px;
+    margin: auto;
+}
+.nav a {
+    text-decoration: none;
+    color: #fff;
+}
+.nav.active {
+    background: rgba(53, 58, 67, 0.96);
+    padding: 1.5em;
+}
+.brand {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 17px;
+    letter-spacing: 1px;
+}
+.features div {
+    width: 1170px;
+    margin: auto;
+}
+.features div.feature {
+    width: 33.3%;
+    margin-right: -4px;
+    display: inline-block;
+    text-align: center;
+    padding: 2em;
+}
+.feature h2 {
+    font-size: 23px;
+    line-height: 32px;
+    font-weight: 400;
+    color: #353535;
+}
+.feature p {
+    color: #727272;
+    font-size: 16px;
+    line-height: 28px;
+    font-weight: 400;
+}
+.feature .nbr {
+    font-style: normal;
+    font-size: 40px;
+    background: #ddd;
+    color: #555;
+    padding: 3px 18px 3px 18px;
+    border-radius: 50%;
+}
+@media (max-width: 1200px) {
+    .intro, .features div, .nav div {
+        width: 800px;
+    }
+}
