@@ -47,16 +47,17 @@ app.use(cookieParser)
     })).get('/dashboard', function(req, res) { //route pour le dashboard
         session = req.session;
         res.render('dashboard.ejs', {});
-    }).get('/courses', function(req, res) { //route pour le supermarché
+    }).get('/', function(req, res) {
+        res.render('intro.ejs', {});
+    })
+    .get('', function(req, res) {
+        res.render('intro.ejs', {});
+    })
+    .get('/courses', function(req, res) {
         session = req.session;
         if (session.panier === undefined) session.panier = [];
         if (session.me === undefined) session.me = [];
         res.render('index.ejs', {});
-    }).get('/', function(req, res) { //route pour la presentation
-        res.render('intro.ejs', {});
-    })
-    .get('', function(req, res) { //idem
-        res.render('intro.ejs', {});
     })
     .get('/:dir/:file', function(req, res) { //routes pour les fichiers à inclure
         var dir = req.params.dir;
