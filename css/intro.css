@@ -94,8 +94,8 @@ a, .nav {
 }
 .brand {
     font-weight: 600;
-    text-transform: uppercase;
-    font-size: 17px;
+    font-family: 'Crafty Girls', cursive;
+    font-size: 30px;
     letter-spacing: 1px;
 }
 .features div {
