@@ -90,7 +90,7 @@ a, .nav {
 }
 .nav.active {
     background: rgba(53, 58, 67, 0.96);
-    padding: 1.5em;
+    padding: 1em;
 }
 .brand {
     font-weight: 600;
